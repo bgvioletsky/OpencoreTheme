@@ -1,4 +1,4 @@
-##Opencore主题
+##                                                                                                    Opencore主题
 
 >1、原神主题
 
