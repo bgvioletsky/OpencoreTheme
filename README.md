@@ -6,4 +6,4 @@
     用base主题直接clone该仓库并将其放入images文件夹中在修改配置文件为Bgcode/base即可
 > base主题：如图
 
-![](Resource/base.png)
+![](https://mirror.ghproxy.com/https://raw.githubusercontent.com/bgvioletsky/OpencoreTheme/master/Resource/base.png)
