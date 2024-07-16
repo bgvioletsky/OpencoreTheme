@@ -1,0 +1,80 @@
+name: 下载软件并发布文件
+
+on:
+  workflow_dispatch:
+#   schedule:
+#    - cron: 0 17 * * 5
+env:
+  TZ: Asia/Shanghai
+  
+jobs:
+  build:
+    name: 下载
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: 自动版本号
+        run: |
+            $versionFile = "version.txt"
+            if (-not (Test-Path $versionFile)) {
+                Set-Content -Path $versionFile -Value "0.0.0"
+            }
+            $version = Get-Content -Path $versionFile
+            $versionArray = $version.Split('.')
+            $versionArray[2] = [int]$versionArray[2] + 1
+            if ($versionArray[2] -eq 20) {
+                $versionArray[2] = 0
+                $versionArray[1] = [int]$versionArray[1] + 1
+                if ($versionArray[1] -eq 20) {
+                    $versionArray[1] = 0
+                    $versionArray[0] = [int]$versionArray[0] + 1
+                }
+            }
+            $newVersion = $versionArray -join '.'
+            Set-Content -Path $versionFile -Value $newVersion
+            echo "version=v$newVersion" >> $env:GITHUB_ENV
+      - name: 创建链接
+        id: ss
+        run: |  
+            echo "下载软件app">> release.txt
+    
+      - name: 发布到release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+        with:
+          tag_name: ${{ env.version }}
+          body_path: release.txt
+          files: ./path/*
+      - name: commit
+        run: |
+             git config --local user.email "44770157@qq.com"
+             git config --local user.name "bgcode"
+             git pull
+             git add version.txt
+             git commit -m "update $(date +'%Y-%m-%d %H:%M:%S')"  
+      - name:  Push changes
+        uses:  ad-m/github-push-action@master
+        with:  
+          branch: main
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 删除过去的workflow
+        uses: GitRML/delete-workflow-runs@main
+        with:
+          retain_days: 1
+          keep_minimum_runs: 3
+          
+    
+      - name: 删除老的Releases
+        uses: dev-drprasad/delete-older-releases@v0.1.0
+        with:
+          keep_latest: 10
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    
